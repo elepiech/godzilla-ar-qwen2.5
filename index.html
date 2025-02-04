@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Godzilla AR Game</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.0/aframe/build/aframe-ar-nft.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    #dpad {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    .dpad-button {
+      width: 50px;
+      height: 50px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- AR Scene -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <!-- Camera -->
+    <a-entity camera></a-entity>
+
+    <!-- Ground Plane -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="10" height="10" color="#333"></a-plane>
+
+    <!-- Futuristic City -->
+    <a-entity id="city" position="0 0.5 0">
+      <!-- Buildings -->
+      <a-box position="-2 0.5 -2" depth="1" height="2" width="1" color="#ff00ff"></a-box>
+      <a-box position="2 0.5 -2" depth="1" height="3" width="1" color="#00ffff"></a-box>
+      <a-box position="0 0.5 2" depth="1" height="2.5" width="1" color="#ffff00"></a-box>
+    </a-entity>
+
+    <!-- Godzilla -->
+    <a-entity id="godzilla" gltf-model="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"
+              scale="0.5 0.5 0.5" position="0 0 0"></a-entity>
+
+    <!-- Timer UI -->
+    <a-text id="timer" value="Time: 30" position="0 2 -3" color="white"></a-text>
+    <a-text id="score" value="Score: 0" position="0 1.5 -3" color="white"></a-text>
+  </a-scene>
+
+  <!-- DPad Controls -->
+  <div id="dpad">
+    <div class="dpad-button" onclick="moveGodzilla('up')">⬆️</div>
+    <div class="dpad-button" onclick="moveGodzilla('down')">⬇️</div>
+    <div class="dpad-button" onclick="moveGodzilla('left')">⬅️</div>
+    <div class="dpad-button" onclick="moveGodzilla('right')">➡️</div>
+  </div>
+
+  <script>
+    let score = 0;
+    let timeLeft = 30;
+
+    // Move Godzilla
+    function moveGodzilla(direction) {
+      const godzilla = document.getElementById('godzilla');
+      const position = godzilla.getAttribute('position');
+
+      switch (direction) {
+        case 'up':
+          position.z -= 0.2;
+          break;
+        case 'down':
+          position.z += 0.2;
+          break;
+        case 'left':
+          position.x -= 0.2;
+          break;
+        case 'right':
+          position.x += 0.2;
+          break;
+      }
+
+      godzilla.setAttribute('position', position);
+
+      // Check collision with buildings
+      checkCollision();
+    }
+
+    // Check Collision
+    function checkCollision() {
+      const godzilla = document.getElementById('godzilla');
+      const buildings = document.querySelectorAll('#city a-box');
+
+      buildings.forEach(building => {
+        const buildingPos = building.getAttribute('position');
+        const godzillaPos = godzilla.getAttribute('position');
+
+        const distance = Math.sqrt(
+          Math.pow(buildingPos.x - godzillaPos.x, 2) +
+          Math.pow(buildingPos.z - godzillaPos.z, 2)
+        );
+
+        if (distance < 1) {
+          building.parentNode.removeChild(building); // Destroy building
+          score++;
+          document.getElementById('score').setAttribute('value', `Score: ${score}`);
+        }
+      });
+    }
+
+    // Timer Logic
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        document.getElementById('timer').setAttribute('value', `Time: ${timeLeft}`);
+      } else {
+        alert(`Game Over! Your Score: ${score}`);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
